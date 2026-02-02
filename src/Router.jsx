@@ -4,6 +4,7 @@ import {
   RouterProvider,
   Navigate,
 } from "react-router-dom";
+
 import App from "./App";
 import AuthLayout from "../src/components/AuthLayout";
 import Login from "./scenes/login";
@@ -47,6 +48,7 @@ import Arquivosareas from "./scenes/arquivosareas";
 import Relatoriotrade2 from "./scenes/relatoriostrade";
 import PainelIndustriasTrade from "./scenes/painel-industriasTrade";
 import MonitoramentoVendedor from "./scenes/monitoramentovendedor";
+
 import {
   Team,
   Invoices,
@@ -59,7 +61,15 @@ import {
   Calendar,
   Stream,
 } from "./scenes";
+
 import PrivateRoute from "./components/PrivateRoute";
+
+// ✅ CRIE/APONTE PARA A TELA DE DETALHE
+// Exemplo de caminho (ajuste conforme seu projeto):
+import RelatoriosSaudeDetalhe from "./scenes/RelatoriosSaudeDetalhe";
+// (Opcional futuramente)
+// import RelatoriosIluminacaoDetalhe from "./scenes/relatorios-iluminacao-detalhe";
+// import RelatoriosTransporteDetalhe from "./scenes/relatorios-transporte-detalhe";
 
 const router = createBrowserRouter(
   [
@@ -81,7 +91,7 @@ const router = createBrowserRouter(
         { path: "/csc", element: <PrivateRoute><Csc /></PrivateRoute> },
         { path: "/capatarefas", element: <PrivateRoute><Capatarefas /></PrivateRoute> },
         { path: "/capaarquivos", element: <PrivateRoute><Capaarquivos /></PrivateRoute> },
-        { path: "/manuaisCSC", element: <PrivateRoute><ManuaisCSC /></PrivateRoute> },  
+        { path: "/manuaisCSC", element: <PrivateRoute><ManuaisCSC /></PrivateRoute> },
         { path: "/manuais", element: <PrivateRoute><Manuais /></PrivateRoute> },
         { path: "/eapplanejamento", element: <PrivateRoute><Eapplanejamento /></PrivateRoute> },
         { path: "/dataplanejamento", element: <PrivateRoute><DataPlanejamento /></PrivateRoute> },
@@ -101,7 +111,17 @@ const router = createBrowserRouter(
         { path: "/projetos", element: <PrivateRoute><Projetos /></PrivateRoute> },
         { path: "/projetos2", element: <PrivateRoute><Projetos2 /></PrivateRoute> },
         { path: "/monitoramento", element: <PrivateRoute><Monitoramento /></PrivateRoute> },
+
+        // ✅ LISTA
         { path: "/relatorios", element: <PrivateRoute><Relatorios /></PrivateRoute> },
+
+        // ✅ DETALHE (resolve o 404)
+        { path: "/relatorios/saude/:id", element: <PrivateRoute><RelatoriosSaudeDetalhe /></PrivateRoute> },
+
+        // (Opcional futuramente)
+        // { path: "/relatorios/iluminacao/:id", element: <PrivateRoute><RelatoriosIluminacaoDetalhe /></PrivateRoute> },
+        // { path: "/relatorios/transporte/:id", element: <PrivateRoute><RelatoriosTransporteDetalhe /></PrivateRoute> },
+
         { path: "/roteirizacao", element: <PrivateRoute><Roteirizacao /></PrivateRoute> },
         { path: "/arquivos", element: <PrivateRoute><Arquivos /></PrivateRoute> },
         { path: "/kanban", element: <PrivateRoute><Kanban /></PrivateRoute> },
@@ -122,10 +142,9 @@ const router = createBrowserRouter(
         { path: "/usuario/editar", element: <PrivateRoute><UserDetalhe /></PrivateRoute> },
       ],
     },
-    // Redirecionamento da rota raiz ("/") para "/login"
     {
       path: "/",
-      element: <Navigate to="/login" /> // Redireciona para a página de login
+      element: <Navigate to="/login" />,
     },
   ],
   {

@@ -1,14 +1,25 @@
-import React from "react";
+import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
-
-// Função para verificar autenticação
-const isAuthenticated = () => {
-  const token = localStorage.getItem("token"); // Verifica se existe um token no localStorage
-  return !!token; // Retorna true se o token existir
-};
+import { onAuthStateChanged } from "firebase/auth";
+import { authArago } from "../data/firebase-config"; // 🔥 auth do App RN
 
 const PrivateRoute = ({ children }) => {
-  return isAuthenticated() ? children : <Navigate to="/login" />; // Redireciona para login se não estiver autenticado
+  const [loading, setLoading] = useState(true);
+  const [isAuth, setIsAuth] = useState(false);
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(authArago, (user) => {
+      setIsAuth(!!user);
+      setLoading(false);
+    });
+
+    return () => unsub();
+  }, []);
+
+  // evita render quebrado enquanto valida auth
+  if (loading) return null;
+
+  return isAuth ? children : <Navigate to="/login" replace />;
 };
 
 export default PrivateRoute;

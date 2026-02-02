@@ -18,7 +18,7 @@ import {
 } from "firebase/auth";
 
 import { doc, getDoc } from "firebase/firestore";
-import { authFokus360, dbFokus360 as db } from "../../data/firebase-config";
+import { authArago, dbArago as db } from "../../data/firebase-config";
 
 import CloseIcon from "@mui/icons-material/Close";
 import WarningIcon from "@mui/icons-material/Warning";
@@ -66,51 +66,48 @@ const Login = () => {
     }
 
     try {
-      const userCredential = await signInWithEmailAndPassword(
-        authFokus360,
-        email,
-        password
-      );
+      const userCredential = await signInWithEmailAndPassword(authArago, email, password);
       const user = userCredential.user;
 
-      if (!user.emailVerified) {
-        window.alert("Por favor, verifique seu e-mail antes de fazer login.");
-        await authFokus360.signOut();
-        return;
-      }
+      
 
-      const userDoc = await getDoc(doc(db, "user", user.uid));
-      if (userDoc.exists()) {
-        const userRole = userDoc.data().role;
+      const userDoc = await getDoc(doc(db, "users", user.uid));
 
-        localStorage.setItem("userId", user.uid);
-        localStorage.setItem("token", user.accessToken);
-        localStorage.setItem("userRole", userRole);
+        if (userDoc.exists()) {
+          const userRole = userDoc.data().role ?? "00";
 
-        navigate(userRole === "07" ? "/projetos" : "/home");
-      } else {
-        setAlert({
-          open: true,
-          message: "Usuário não encontrado no Firestore.",
-          severity: "error",
-        });
-      }
+          localStorage.setItem("userId", user.uid);
+          localStorage.setItem("token", user.accessToken);
+          localStorage.setItem("userRole", userRole);
+
+          navigate(userRole === "07" ? "/projetos" : "/home");
+        } else {
+          setAlert({
+            open: true,
+            message: "Usuário não encontrado no Firestore.",
+            severity: "error",
+          });
+        }
     } catch (error) {
-      let errorMessage = "Ocorreu um erro inesperado.";
-      if (error.code === "auth/user-not-found") {
-        errorMessage = "Usuário não encontrado. Verifique o email informado.";
-      } else if (error.code === "auth/wrong-password") {
-        errorMessage = "Senha incorreta. Tente novamente.";
-      } else if (error.code === "auth/invalid-email") {
-        errorMessage = "Email inválido. Por favor, insira um email válido.";
-      }
+  console.log("🔥 AUTH ERROR:", error.code, error.message);
 
-      setAlert({
-        open: true,
-        message: errorMessage,
-        severity: "error",
-      });
-    }
+  const map = {
+    "auth/user-not-found": "Usuário não encontrado.",
+    "auth/wrong-password": "Senha incorreta.",
+    "auth/invalid-email": "Email inválido.",
+    "auth/invalid-api-key": "API KEY inválida (config do Firebase errada).",
+    "auth/operation-not-allowed": "Email/Senha não está habilitado no Firebase Auth.",
+    "auth/network-request-failed": "Falha de rede (internet / bloqueio).",
+    "auth/too-many-requests": "Muitas tentativas. Aguarde um pouco.",
+  };
+
+  setAlert({
+    open: true,
+    message: map[error.code] || `${error.code} - ${error.message}`,
+    severity: "error",
+  });
+}
+
   };
 
   // Reset senha
@@ -125,7 +122,7 @@ const Login = () => {
     }
 
     try {
-      await sendPasswordResetEmail(authFokus360, resetEmail);
+      await sendPasswordResetEmail(authArago, resetEmail);
       setAlertReset({
         open: true,
         message:
