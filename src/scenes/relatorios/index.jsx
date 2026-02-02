@@ -117,6 +117,9 @@ function getProgressPercent(req) {
 const Relatorios = () => {
   const navigate = useNavigate();
 
+  const [usersMap, setUsersMap] = useState({});
+
+
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [requests, setRequests] = useState([]);
@@ -135,6 +138,20 @@ const Relatorios = () => {
     setAnchorEl(null);
     setSelectedRow(null);
   }
+
+
+  useEffect(() => {
+  const unsub = onSnapshot(collection(dbArago, "users"), (snap) => {
+    const map = {};
+    snap.docs.forEach((d) => {
+      map[d.id] = d.data(); // d.id === userId da request
+    });
+    setUsersMap(map);
+  });
+
+  return () => unsub();
+}, []);
+
 
   // ✅ ASSINATURA: filtra por userEmail + areaId
   useEffect(() => {
@@ -232,6 +249,9 @@ const Relatorios = () => {
 
       const saudeData = req?.saudeData || req?.data || null;
 
+      const userName = usersMap[req?.userId]?.nome || "—";
+
+
       const titulo = req?.requestTitle || "SOLICITAÇÃO SAÚDE - EXAMES E CONSULTAS";
 
       const especialidade =
@@ -255,6 +275,7 @@ const Relatorios = () => {
         category: "Saúde",
         stock: progress >= 100,
         sku: req.id.slice(0, 6).toUpperCase(),
+        userName,
         userEmail: req?.userEmail || "—",
         price: formatDateTimeBR(req?.createdAt || req?.createdAtMs),
         qty: `${progress}%`,
@@ -344,6 +365,11 @@ const Relatorios = () => {
       </Box>
     );
   };
+
+ const GRID = "40px 4fr 1.5fr 3fr 1fr 1fr";
+// checkbox | solicitação | área | usuário (nome+email) | status | ação
+
+
 
   return (
     <>
@@ -549,9 +575,8 @@ const Relatorios = () => {
             <Box
               sx={{
                 display: "grid",
-                gridTemplateColumns:
-                  "40px 3fr 1.2fr 0.7fr 0.7fr 0.8fr 0.7fr 0.9fr 0.8fr",
-                gap: 1.5,
+                gridTemplateColumns: GRID,
+                columnGap: 4,          // ✅ mais espaço horizontal
                 px: 1.5,
                 py: 1.2,
                 fontSize: 11,
@@ -562,13 +587,12 @@ const Relatorios = () => {
             >
               <Checkbox size="small" />
               <Box>SOLICITAÇÃO</Box>
-              <Box>AREA</Box>
-              <Box>PROGRESSO</Box>
+              <Box>ÁREA</Box>
               <Box>USUÁRIO</Box>
-              <Box>DATA</Box>
               <Box>STATUS</Box>
               <Box>AÇÃO</Box>
             </Box>
+
 
             {/* loading / empty */}
             {loadingRequests ? (
@@ -589,9 +613,8 @@ const Relatorios = () => {
                   key={r.id}
                   sx={{
                     display: "grid",
-                    gridTemplateColumns:
-                      "40px 3fr 1.2fr 0.7fr 0.7fr 0.8fr 0.7fr 0.9fr 0.8fr",
-                    gap: 1.5,
+                    gridTemplateColumns: GRID,  // ✅ igual ao header
+                    columnGap: 4,               // ✅ espaço entre colunas
                     px: 1.5,
                     py: 1.3,
                     alignItems: "center",
@@ -600,7 +623,8 @@ const Relatorios = () => {
                 >
                   <Checkbox size="small" />
 
-                  <Box sx={{ display: "flex", gap: 1.2, alignItems: "center" }}>
+                  {/* Solicitação */}
+                  <Box sx={{ display: "flex", gap: 1.2, alignItems: "center", minWidth: 0 }}>
                     <Box
                       sx={{
                         width: 36,
@@ -608,51 +632,47 @@ const Relatorios = () => {
                         borderRadius: 1.2,
                         bgcolor: "rgba(0,0,0,0.05)",
                         border: "1px solid rgba(0,0,0,0.06)",
+                        flex: "0 0 auto",
                       }}
                     />
-                    <Box>
-                      <Typography
-                        sx={{
-                          fontSize: 13,
-                          fontWeight: 900,
-                          color: "#2F2B3D",
-                          lineHeight: 1.2,
-                        }}
-                      >
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography sx={{ fontSize: 13, fontWeight: 900, color: "#5c5c5c", lineHeight: 1.2 }}>
                         {r.product}
                       </Typography>
-                      <Typography sx={{ fontSize: 12, color: "#6F6B7D", lineHeight: 1.2 }}>
+                      <Typography sx={{ fontSize: 13, color: "#6F6B7D", lineHeight: 1.2 }}>
                         {r.desc}
                       </Typography>
                     </Box>
                   </Box>
 
+                  {/* Área */}
                   <Typography sx={{ fontSize: 13, color: "#6F6B7D" }}>
                     {r.category}
                   </Typography>
 
-                  
+                  {/* Usuário */}
+                    <Box sx={{ display: "flex", flexDirection: "column", lineHeight: 1.2 }}>
+                      <Typography sx={{ fontSize: 13, fontWeight: 600, color: "#4B5563" }}>
+                        {r.userName}
+                      </Typography>
+                      {/* email */}
+                      <Typography sx={{ fontSize: 12, color: "#6F6B7D", mt: 0.2 }}>
+                        {r.userEmail}
+                      </Typography>
+                    </Box>
 
-                  <Typography sx={{ fontSize: 13, color: "#6F6B7D" }}>
-                    {r.userEmail}
-                  </Typography>
 
-                  
-
+                  {/* Status */}
                   {statusPill(r.status)}
 
-                  {/* ✅ AÇÃO: lápis + menu ⋮ */}
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1, marginLeft: 3 }}>
-                    <IconButton
-                      size="small"
-                      onClick={() => navigate(`/relatorios/saude/${r.id}`)}
-                    >
+                  {/* Ação */}
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <IconButton size="small" onClick={() => navigate(`/relatorios/saude/${r.id}`)}>
                       <EditOutlinedIcon fontSize="small" />
                     </IconButton>
-
-                    
                   </Box>
                 </Box>
+
               ))
             )}
 
