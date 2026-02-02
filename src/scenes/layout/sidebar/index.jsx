@@ -12,13 +12,11 @@ import {
   PowerSettingsNew as LogoutIcon,
 } from "@mui/icons-material";
 import { Tooltip } from "@mui/material";
-import FilterTiltShiftIcon from '@mui/icons-material/FilterTiltShift';
-import GroupWorkIcon from '@mui/icons-material/GroupWork';
 import HeatPumpIcon from '@mui/icons-material/HeatPump';
 
 
 import { useNavigate, Link } from "react-router-dom";
-import logo from "../../../assets/images/icone_logo.png";
+import logo from "../../../assets/images/fokus360cinza.png";
 import { tokens } from "../../../theme";
 import { authFokus360, dbFokus360 as db } from "../../../data/firebase-config";
 
@@ -26,8 +24,8 @@ import { ToggledContext } from "../../../App";
 import { signOut, onAuthStateChanged } from "firebase/auth";
 
 import { doc, getDoc } from "firebase/firestore";
-import icon_logo from "../../../assets/images/icon_logo.png";
-import LocationOnIcon from '@mui/icons-material/LocationOn';
+import icon_logo from "../../../assets/images/fokus360cinza.png";
+
 
 
 const SideBar = () => {
@@ -167,7 +165,7 @@ const SideBar = () => {
 <Menu
   menuItemStyles={{
     button: {
-      color: "#312783",
+      color: "#4B0F8A",
       backgroundColor: "#f2f0f0",
       ":hover": {
         color: "#bbbbbb",
@@ -178,9 +176,9 @@ const SideBar = () => {
   }}
 >
   <MenuItem
-    component={<Link to="/home" />}
+    component={<Link to="/homesaude" />}
     icon={<AssessmentIcon sx={{ fontSize: 25 }} />}>
-    Relatórios
+    SAÚDE
   </MenuItem>
 
   
@@ -362,7 +360,7 @@ const SideBar = () => {
             src={icon_logo}
             alt="Logo"
             style={{
-              maxWidth: "30px",
+              maxWidth: "60px",
               height: "auto",
             }}
           />

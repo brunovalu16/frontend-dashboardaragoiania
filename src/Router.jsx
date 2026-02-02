@@ -14,6 +14,7 @@ import Relatorios from "./scenes/relatorios";
 import PainelIndustrias from "./scenes/painel-industrias";
 import Kanban from "./scenes/kanban";
 import Home from "./scenes/home";
+import Homesaude from "./scenes/homesaude";
 import Arquivos from "./scenes/arquivos";
 import VendasDevolucao from "./scenes/vendasdevolucao";
 import RelatorioTrade from "./scenes/relatoriotrade";
@@ -71,6 +72,7 @@ const router = createBrowserRouter(
       children: [
         { path: "/cadastro", element: <PrivateRoute><Cadastro /></PrivateRoute> },
         { path: "/home", element: <PrivateRoute><Home /></PrivateRoute> },
+        { path: "/Homesaude", element: <PrivateRoute><Homesaude /></PrivateRoute> },
         { path: "/planejamentogeral", element: <PrivateRoute><PlanejamentoGeral /></PrivateRoute> },
         { path: "/arquivosareas", element: <PrivateRoute><Arquivosareas /></PrivateRoute> },
         { path: "/relatoriotrade2", element: <PrivateRoute><Relatoriotrade2 /></PrivateRoute> },

@@ -8,6 +8,8 @@ import {
   Alert,
   Collapse,
   IconButton,
+  InputAdornment,
+  Divider,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import {
@@ -16,26 +18,34 @@ import {
 } from "firebase/auth";
 
 import { doc, getDoc } from "firebase/firestore";
-import { authFokus360, dbFokus360 as db } from "../../data/firebase-config"; // ✅ Removido appFokus360
-
+import { authFokus360, dbFokus360 as db } from "../../data/firebase-config";
 
 import CloseIcon from "@mui/icons-material/Close";
 import WarningIcon from "@mui/icons-material/Warning";
-import background from "../../assets/images/backlogin4.webp";
-import logo from "../../assets/images/fokus360cinza.png";
+import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
+import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 
+
+import logo from "../../assets/images/fokus360cinza.png"; // logo do painel
+
+const CARD_W = 820; // parecido com o print
+const LEFT_W = 320;
 
 const Login = () => {
-  const [open, setOpen] = useState(false); // Controla o modal de redefinição de senha
-  const [resetEmail, setResetEmail] = useState(""); // Armazena o e-mail para redefinição
+  const [open, setOpen] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
   const [alertReset, setAlertReset] = useState({
     open: false,
     message: "",
     severity: "info",
   });
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPass, setShowPass] = useState(false);
+
   const navigate = useNavigate();
+
   const [alert, setAlert] = useState({
     open: false,
     message: "",
@@ -45,7 +55,7 @@ const Login = () => {
   // Login
   const handleLogin = async (e) => {
     e.preventDefault();
-  
+
     if (!email || !password) {
       setAlert({
         open: true,
@@ -54,7 +64,7 @@ const Login = () => {
       });
       return;
     }
-  
+
     try {
       const userCredential = await signInWithEmailAndPassword(
         authFokus360,
@@ -62,24 +72,21 @@ const Login = () => {
         password
       );
       const user = userCredential.user;
-  
-      // Verificar se o e-mail foi confirmado
+
       if (!user.emailVerified) {
         window.alert("Por favor, verifique seu e-mail antes de fazer login.");
-        await authFokus360.signOut(); // Desconecta o usuário
+        await authFokus360.signOut();
         return;
       }
-  
+
       const userDoc = await getDoc(doc(db, "user", user.uid));
       if (userDoc.exists()) {
         const userRole = userDoc.data().role;
-        
-        // Armazenar autenticação no localStorage
-        localStorage.setItem("userId", user.uid); // 👈 salva o ID do usuário logado
-        localStorage.setItem("token", user.accessToken); // Salva o token no localStorage
-        localStorage.setItem("userRole", userRole); // Armazena o papel do usuário (opcional)
-  
-        // Redirecionar com base no papel do usuário
+
+        localStorage.setItem("userId", user.uid);
+        localStorage.setItem("token", user.accessToken);
+        localStorage.setItem("userRole", userRole);
+
         navigate(userRole === "07" ? "/projetos" : "/home");
       } else {
         setAlert({
@@ -97,8 +104,7 @@ const Login = () => {
       } else if (error.code === "auth/invalid-email") {
         errorMessage = "Email inválido. Por favor, insira um email válido.";
       }
-      
-  
+
       setAlert({
         open: true,
         message: errorMessage,
@@ -106,9 +112,8 @@ const Login = () => {
       });
     }
   };
-  
 
-  // Função para enviar o e-mail de redefinição de senha
+  // Reset senha
   const handlePasswordReset = async () => {
     if (!resetEmail) {
       setAlertReset({
@@ -118,20 +123,17 @@ const Login = () => {
       });
       return;
     }
-  
+
     try {
-      console.log("Enviando e-mail para:", resetEmail);
       await sendPasswordResetEmail(authFokus360, resetEmail);
-      console.log("E-mail enviado com sucesso!");
       setAlertReset({
         open: true,
         message:
           "E-mail de redefinição de senha enviado com sucesso! Verifique sua caixa de entrada.",
         severity: "success",
       });
-      setOpen(false); // Fecha o modal
+      setOpen(false);
     } catch (error) {
-      console.error("Erro ao enviar e-mail de redefinição:", error.code, error.message);
       setAlertReset({
         open: true,
         message:
@@ -140,32 +142,53 @@ const Login = () => {
       });
     }
   };
-  
+
+  // Inputs estilo do print (underline/cinza)
+  const inputSx = {
+    "& .MuiOutlinedInput-root": {
+      borderRadius: "2px",
+      backgroundColor: "transparent",
+      "& fieldset": { borderColor: "transparent" },
+      "&:hover fieldset": { borderColor: "transparent" },
+      "&.Mui-focused fieldset": { borderColor: "transparent" },
+    },
+    "& .MuiOutlinedInput-notchedOutline": { border: "none" },
+    "& .MuiInputLabel-root": { color: "#9CA3AF", fontSize: 12 },
+    "& .MuiInputLabel-root.Mui-focused": { color: "#9CA3AF" },
+    "& .MuiOutlinedInput-input": {
+      color: "#374151",
+      fontSize: 13,
+      paddingLeft: 0,
+    },
+  };
 
   return (
     <>
       {/* Modal para redefinição de senha */}
-      <Modal
-        open={open}
-        onClose={() => setOpen(false)}
-        aria-labelledby="reset-password-modal-title"
-        aria-describedby="reset-password-modal-description"
-      >
+      <Modal open={open} onClose={() => setOpen(false)}>
         <Box
           sx={{
-            width: "30%",
+            width: 420,
+            maxWidth: "92vw",
             backgroundColor: "#fff",
-            padding: 4,
-            borderRadius: 3,
-            boxShadow: 3,
-            textAlign: "center",
-            margin: "0 auto",
-            marginTop: "10%",
+            p: 4,
+            borderRadius: 1,
+            boxShadow: "0 18px 40px rgba(0,0,0,0.18)",
+            textAlign: "left",
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            outline: "none",
           }}
         >
-          <Typography variant="h6" mb={2} sx={{ color: "#a7a7a7" }}>
-            Redefinir Senha
+          <Typography sx={{ color: "#111827", fontWeight: 700, mb: 0.5 }}>
+            Redefinir senha
           </Typography>
+          <Typography sx={{ color: "#6B7280", mb: 2, fontSize: 13 }}>
+            Informe seu e-mail para receber o link de redefinição.
+          </Typography>
+
           <TextField
             label="E-mail"
             type="email"
@@ -173,41 +196,46 @@ const Login = () => {
             variant="outlined"
             value={resetEmail}
             onChange={(e) => setResetEmail(e.target.value)}
-            sx={{ marginBottom: 3 }}
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                borderRadius: 1,
+                "& fieldset": { borderColor: "#D1D5DB" },
+                "&:hover fieldset": { borderColor: "#9CA3AF" },
+                "&.Mui-focused fieldset": { borderColor: "#2563EB" },
+              },
+            }}
           />
+
           <Button
             variant="contained"
             fullWidth
             sx={{
-              backgroundColor: "#312783",
-              color: "white",
-              "&:hover": { backgroundColor: "#312783" },
+              mt: 2,
+              height: 42,
+              borderRadius: 1,
+              backgroundColor: "#4B0F8A",
+              textTransform: "none",
+              fontWeight: 700,
+              "&:hover": { backgroundColor: "#6316b4" },
             }}
             onClick={handlePasswordReset}
           >
-            Enviar Email de Redefinição
+            Enviar link
           </Button>
         </Box>
       </Modal>
 
-      {/* Modal de alerta */}
-      <Modal
-        open={alert.open}
-        onClose={() => setAlert({ ...alert, open: false })}
-        aria-labelledby="alert-modal-title"
-        aria-describedby="alert-modal-description"
-      >
+      {/* Modal de alerta (erro login) */}
+      <Modal open={alert.open} onClose={() => setAlert({ ...alert, open: false })}>
         <Box
           sx={{
-            width: "50%",
+            width: "100%",
             height: "100vh",
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
-            margin: "0 auto",
             outline: "none",
             background: "transparent",
-            boxShadow: "none",
           }}
         >
           <Collapse in={alert.open}>
@@ -218,9 +246,7 @@ const Login = () => {
                   aria-label="close"
                   color="inherit"
                   size="small"
-                  onClick={() => {
-                    setAlert({ ...alert, open: false });
-                  }}
+                  onClick={() => setAlert({ ...alert, open: false })}
                 >
                   <CloseIcon fontSize="inherit" />
                 </IconButton>
@@ -230,207 +256,208 @@ const Login = () => {
                 backgroundColor: "#dc2626",
                 border: "none",
                 color: "white",
-                "& .MuiAlert-icon": {
-                  color: "yellow",
-                },
+                "& .MuiAlert-icon": { color: "yellow" },
+                boxShadow: "0 18px 40px rgba(220,38,38,0.25)",
+                borderRadius: 1,
               }}
             >
-              Por favor, verifique seu email e senha...
+              {alert.message || "Por favor, verifique seu email e senha..."}
             </Alert>
           </Collapse>
         </Box>
       </Modal>
 
-      {/* Alerta verde */}
+      {/* Alerta verde (reset) */}
       <Box
         sx={{
           position: "fixed",
-          top: "10px",
+          top: 10,
           left: "50%",
           transform: "translateX(-50%)",
-          zIndex: 1000,
+          zIndex: 2000,
+          width: "min(520px, 92vw)",
         }}
       >
         {alertReset.open && (
           <Alert
             severity={alertReset.severity}
             onClose={() => setAlertReset({ ...alertReset, open: false })}
+            sx={{ borderRadius: 1, boxShadow: "0 18px 40px rgba(0,0,0,0.12)" }}
           >
             {alertReset.message}
           </Alert>
         )}
       </Box>
 
-      {/* Formulário de login */}
+      {/* Fundo + Card central */}
       <Box
-        display="flex"
-        flexDirection="row"
-        alignItems="center"
-        justifyContent="center"
         sx={{
-          backgroundColor: "#f2f2f2", // ✅ força fundo branco antes da imagem carregar
-          backgroundImage: `url(${background})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
-          // backgroundAttachment: "fixed", // ❌ REMOVA ISSO!
           width: "100vw",
           minHeight: "100vh",
+          backgroundColor: "#EFEFEF",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          p: 3,
         }}
       >
-
         <Box
           sx={{
-            padding: "30px",
-            paddingBottom: "50px",
+            width: "min(100%, 980px)",
+            maxWidth: CARD_W,
+            backgroundColor: "#fff",
+            boxShadow: "0 18px 45px rgba(0,0,0,0.12)",
+            borderRadius: 5,
+            position: "relative",
             display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            borderBottomLeftRadius: "50px",
-            transform: "scale(0.8)",
-            marginRight: "-95px",
-            height: "35%",
+            overflow: "hidden",
           }}
         >
-          <img
-            src={logo}
-            alt="Logo"
-            style={{
-              width: "380px",
-              height: "auto",
-            }}
-          />
-        </Box>
+          
 
-        <Box
-          sx={{
-            borderTopRightRadius: "50px",
-            borderBottomLeftRadius: "50px",
-            background: "radial-gradient(circle, #fff, #f7f7f7)",
-            padding: 4,
-            boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.3)",
-            width: "90%",
-            maxWidth: 400,
-            textAlign: "center",
-            transform: "scale(0.8)",
-            marginRight: "370px",
-          }}
-
-        >
+          {/* Painel azul (esquerda) */}
           <Box
-            component="form"
-            onSubmit={handleLogin}
-            sx={{ display: "flex", flexDirection: "column", gap: 1 }}
+            sx={{
+              width: LEFT_W,
+              minHeight: 380,
+              background:
+                "linear-gradient(180deg, #4B0F8A)",
+              position: "relative",
+              display: { xs: "none", sm: "flex" },
+              flexDirection: "column",
+              justifyContent: "center",
+              alignItems: "center",
+              px: 3,
+              textAlign: "center",
+            }}
           >
-            <TextField
-              label="E-mail"
-              type="email"
-              variant="outlined"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              fullWidth
-              required
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  '& fieldset': {
-                    borderColor: '#aaaaaa',
-                    borderRadius: "20px",
-                  },
-                  '&:hover fieldset': {
-                    borderColor: '#aaaaaa',
-                    borderRadius: "20px",
-                  },
-                  '&.Mui-focused fieldset': {
-                    borderColor: '#aaaaaa',
-                  },
-                  color: '#aaaaaa',
-                },
-                '& .MuiInputLabel-root': {
-                  color: '#b6b6b6',
-                  
-                },
-                '& .MuiInputLabel-root.Mui-focused': {
-                  color: '#b6b6b6',
-                  
-                },
-                '& .MuiOutlinedInput-input': {
-                  color: '#b6b6b6',
-                  
-                },
-                '& .MuiInputBase-input::placeholder': {
-                  color: '#b6b6b6',
-                  opacity: 1,
-                  
-                },
-              }}
-            />
 
-            <TextField
-              label="Senha"
-              type="password"
-              variant="outlined"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              fullWidth
-              required
+            <Box sx={{ position: "relative", zIndex: 2 }}>
+             
+              <Typography
               sx={{
-                '& .MuiOutlinedInput-root': {
-                  '& fieldset': {
-                    borderColor: '#aaaaaa',
-                    borderRadius: "20px",
-                  },
-                  '&:hover fieldset': {
-                    borderColor: '#aaaaaa',
-                    borderRadius: "20px",
-                  },
-                  '&.Mui-focused fieldset': {
-                    borderColor: '#aaaaaa',
-                  },
-                  color: '#b6b6b6',
-                },
-                '& .MuiInputLabel-root': {
-                  color: '#b6b6b6',
-                },
-                '& .MuiInputLabel-root.Mui-focused': {
-                  color: '#b6b6b6',
-                },
-                '& .MuiOutlinedInput-input': {
-                  color: '#b6b6b6',
-                },
-                '& .MuiInputBase-input::placeholder': {
-                  color: '#b6b6b6',
-                  opacity: 1,
-                },
-              }}
-            />
-
-
-            <Button
-              variant="contained"
-              type="submit"
-              fullWidth
-              sx={{
-                borderRadius: 5,
-                backgroundColor: "#312783",
-                color: "white",
-                boxShadow: "none",
-                "&:hover": {
-                  backgroundColor: "#868dfb",
-                  boxShadow: "none",
-                },
+                color: "rgba(255,255,255,0.75)",
+                mt: 1,
+                fontSize: 15,
+                fontWeight: 700, // 👈 bold
               }}
             >
-              Entrar
-            </Button>
+              INOVAÇÃO E PROGRESSO <br /> PARA TODOS
+            </Typography>
 
-            {/* Botão "Esqueci a senha" */}
-            <Button
-              variant="text"
-              onClick={() => setOpen(true)}
-              sx={{ color: "#949494" }}
-            >
-              Esqueci a senha
-            </Button>
+
+              <Box sx={{ mt: 5, display: "flex", justifyContent: "center" }}>
+                <img
+                  src={logo}
+                  alt="Logo"
+                  style={{ height: 150, width: "auto", filter: "brightness(0) invert(1)" }}
+                />
+              </Box>
+            </Box>
+          </Box>
+
+          {/* Form (direita) */}
+          <Box
+            sx={{
+              flex: 1,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              px: { xs: 3, sm: 6 },
+              py: 5,
+            }}
+          >
+            <Box sx={{ width: "100%", maxWidth: 360 }}>
+              <Box component="form" onSubmit={handleLogin} sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
+                <Box>
+                  <Typography sx={{ fontSize: 10, color: "#9CA3AF", fontWeight: 700 }}>
+                    USUÁRIO
+                  </Typography>
+                  <TextField
+                    variant="outlined"
+                    fullWidth
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="DIGITE SEU EMAIL"
+                    sx={inputSx}
+                  />
+                  <Divider sx={{ mt: 0.5 }} />
+                </Box>
+
+                <Box>
+                  <Typography sx={{ fontSize: 10, color: "#9CA3AF", fontWeight: 700 }}>
+                    SENHA
+                  </Typography>
+                  <TextField
+                    variant="outlined"
+                    fullWidth
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    type={showPass ? "text" : "password"}
+                    placeholder="DIGITE A SENHA"
+                    sx={inputSx}
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton onClick={() => setShowPass((s) => !s)} edge="end" size="small">
+                            {showPass ? (
+                              <VisibilityOutlinedIcon sx={{ color: "#9CA3AF" }} />
+                            ) : (
+                              <VisibilityOffOutlinedIcon sx={{ color: "#9CA3AF" }} />
+                            )}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                  <Divider sx={{ mt: 0.5 }} />
+                </Box>
+
+                <Button
+                  variant="contained"
+                  type="submit"
+                  fullWidth
+                  sx={{
+                    height: 38,
+                    borderRadius: 5,
+                    backgroundColor: "#4B0F8A",
+                    fontWeight: 700,
+                    boxShadow: "none",
+                    "&:hover": { backgroundColor: "#6013b3", boxShadow: "none" },
+                  }}
+                >
+                  ENTRAR
+                </Button>
+
+                <Button
+                  variant="text"
+                  onClick={() => setOpen(true)}
+                  sx={{
+                    textTransform: "none",
+                    color: "#9CA3AF",
+                    fontWeight: 600,
+                    alignSelf: "center",
+                    "&:hover": { backgroundColor: "transparent" },
+                  }}
+                >
+                  Esqueci a senha
+                </Button>
+
+                <Button
+                  variant="text"
+                  onClick={() => navigate("/")}
+                  sx={{
+                    textTransform: "none",
+                    color: "#9CA3AF",
+                    fontWeight: 600,
+                    alignSelf: "center",
+                    "&:hover": { backgroundColor: "transparent" },
+                  }}
+                >
+                  CANCELAR
+                </Button>
+              </Box>
+            </Box>
           </Box>
         </Box>
       </Box>

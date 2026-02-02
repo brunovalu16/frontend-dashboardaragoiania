@@ -1,9 +1,7 @@
 import React, { useEffect, useState, useContext } from "react";
-import { AppBar, Box, IconButton, InputBase, Toolbar, Typography, useMediaQuery, useTheme } from "@mui/material";
-import { MenuOutlined, NotificationsOutlined, PersonOutlined, SearchOutlined, SettingsOutlined } from "@mui/icons-material";
+import { Box, IconButton, Toolbar, Typography, useMediaQuery, useTheme } from "@mui/material";
+import { NotificationsOutlined, SettingsOutlined } from "@mui/icons-material";
 import ArrowCircleRightIcon from "@mui/icons-material/ArrowCircleRight";
-import KeyboardDoubleArrowRightIcon from "@mui/icons-material/KeyboardDoubleArrowRight";
-import { ToggledContext } from "../../../App";
 import { authFokus360, dbFokus360 as db } from "../../../data/firebase-config";
 import { Badge, Popover, List, ListItem, ListItemText } from "@mui/material";
 import { collection, query, where, getDocs } from "firebase/firestore";
@@ -17,7 +15,6 @@ import { onAuthStateChanged, signOut } from "firebase/auth";
 
 import { doc, getDoc } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
-import fokus360cinza from "../../../assets/images/fokus360cinza.png";
 import { Link } from 'react-router-dom'; // Certifique-se de importar o Link
 import { Avatar } from "@mui/material";
 
@@ -296,23 +293,7 @@ const open = Boolean(anchorEl);
 
         {/* Parte direita */}
         <Box display="flex" alignItems="center" gap={2}>
-          {/* Adicionando logo ou imagem */}
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            <img
-              src={fokus360cinza}
-              alt="Logo"
-              style={{
-                maxWidth: "150px",
-                height: "auto",
-              }}
-            />
-          </Box>
+         
 
           {/* Linha vertical */}
           <Box
@@ -337,7 +318,7 @@ const open = Boolean(anchorEl);
               component={Link}
               to="/contacts"
               sx={{
-                color: "#312783",
+                color: "#4B0F8A",
                 "&:hover": {
                   backgroundColor: "#f5f5f5",
                 },
@@ -379,14 +360,14 @@ const open = Boolean(anchorEl);
             padding: "0", // Remove o padding
           },
           alignSelf: "center",
-          backgroundColor: "#312783",
+          backgroundColor: "#4B0F8A",
           width: "100%",
         }}
       >
         <IconButton size="large" edge="start" color="inherit" aria-label="menu">
           <ArrowCircleRightIcon
             sx={{
-              color: "#00ebf7",
+              color: "#91e011",
               marginLeft: "15px",
               fontSize: "15px",
               marginLeft: "38px",
@@ -404,13 +385,13 @@ const open = Boolean(anchorEl);
             marginBottom: "3px",
           }}
         >
-          GRUPO FOKUS | www.grupofokus.com.br
+          PREFEITURA DE ARAGOIANIA | INOVAÇÃO E PROGRESSO PARA TODOS
         </Typography>
 
         <IconButton size="large" edge="start" color="inherit" aria-label="menu">
           <CalendarMonthIcon
             sx={{
-              color: "#00ebf7",
+              color: "#91e011",
               marginLeft: "15px",
               fontSize: "18px",
               marginLeft: "38px",
