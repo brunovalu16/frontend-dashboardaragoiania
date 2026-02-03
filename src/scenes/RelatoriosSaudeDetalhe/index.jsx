@@ -30,20 +30,12 @@ import { doc, onSnapshot, getDoc, updateDoc, serverTimestamp } from "firebase/fi
 import { onAuthStateChanged } from "firebase/auth";
 import { authArago, dbArago } from "/src/data/firebase-config.js";
 
-function formatDateBR(ts) {
-  try {
-    const d = ts?.toDate ? ts.toDate() : ts ? new Date(ts) : null;
-    if (!d || Number.isNaN(d.getTime())) return "—";
-    const dd = String(d.getDate()).padStart(2, "0");
-    const mm = String(d.getMonth() + 1).padStart(2, "0");
-    const yyyy = d.getFullYear();
-    const hh = String(d.getHours()).padStart(2, "0");
-    const mi = String(d.getMinutes()).padStart(2, "0");
-    return `${dd}/${mm}/${yyyy} ${hh}:${mi}`;
-  } catch {
-    return "—";
-  }
-}
+
+
+
+
+
+
 
 
 //============================================================================================
@@ -143,15 +135,16 @@ function pickText(v) {
 function formatDateOnlyBR(ts) {
   try {
     const d = ts?.toDate ? ts.toDate() : ts ? new Date(ts) : null;
-    if (!d || Number.isNaN(d.getTime())) return "";
+    if (!d || Number.isNaN(d.getTime())) return "—";
     const dd = String(d.getDate()).padStart(2, "0");
     const mm = String(d.getMonth() + 1).padStart(2, "0");
     const yyyy = d.getFullYear();
     return `${dd}/${mm}/${yyyy}`;
   } catch {
-    return "";
+    return "—";
   }
 }
+
 //===============================================================================================
 
 export default function RelatoriosSaudeDetalhe() {
@@ -307,6 +300,35 @@ alert("Parecer salvo com sucesso!");
 const dmap = useMemo(() => parseDescricaoCampos(req?.descricao), [req?.descricao]);
 
 
+function formatDateBR(ts) {
+  try {
+    const d = ts?.toDate ? ts.toDate() : ts ? new Date(ts) : null;
+    if (!d || Number.isNaN(d.getTime())) return "—";
+    const dd = String(d.getDate()).padStart(2, "0");
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const yyyy = d.getFullYear();
+    const hh = String(d.getHours()).padStart(2, "0");
+    const mi = String(d.getMinutes()).padStart(2, "0");
+    return `${dd}/${mm}/${yyyy} ${hh}:${mi}`;
+  } catch {
+    return "—";
+  }
+}
+
+function formatDateOnlyBR(ts) {
+  try {
+    const d = ts?.toDate ? ts.toDate() : ts ? new Date(ts) : null;
+    if (!d || Number.isNaN(d.getTime())) return "—";
+    const dd = String(d.getDate()).padStart(2, "0");
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const yyyy = d.getFullYear();
+    return `${dd}/${mm}/${yyyy}`;
+  } catch {
+    return "—";
+  }
+}
+
+
 
 
   // blocos do “Resumo da solicitação” (esquerda)
@@ -413,15 +435,22 @@ const veiculo = useMemo(() => {
 
 
   const tituloTopo = useMemo(() => {
-    // se você tiver um campo de título custom, prioriza
-    const base =
-      req?.requestTitle ||
-      req?.titulo ||
-      "SOLICITAÇÃO SAÚDE";
-    const n = req?.numero || req?.num || req?.seq;
-    // no print aparece “SOLICITAÇÃO SAÚDE - 18”
-    return n ? `${base} - ${n}` : `${base} - ${String(id || "").slice(0, 2)}`;
-  }, [req, id]);
+  const base =
+    req?.requestTitle ||
+    req?.titulo ||
+    "SOLICITAÇÃO SAÚDE";
+
+  const n =
+    req?.numeroSolicitacao ??
+    req?.numero ??
+    req?.num ??
+    req?.seq ??
+    null;
+
+  // 🔒 se não tiver número, mostra só o título
+  return n ? `${base} - ${n}` : base;
+}, [req]);
+
 
   if (loading) {
     return (
@@ -522,7 +551,13 @@ const statusMiniIconSx = { ...miniIcon, border: `2px solid ${statusHex}` };
 
        
               {/* Status */}
-              <Paper sx={rowCard}>
+              <Paper
+                sx={{
+                  ...rowCard,
+                  backgroundColor: "#fff",
+                  boxShadow: "none",
+                }}
+              >
                 <Box sx={rowLeft}>
                   <Box sx={statusMiniIconSx} />
                   <Typography sx={rowLabel}>Status</Typography>
@@ -536,17 +571,39 @@ const statusMiniIconSx = { ...miniIcon, border: `2px solid ${statusHex}` };
               </Paper>
 
 
+
+
               {/* Especialidades */}
-              <Paper sx={rowCard}>
+              <Paper
+                sx={{
+                  ...rowCard,
+                  backgroundColor: "#fff",
+                  boxShadow: "none",
+                }}
+              >
                 <Box sx={rowLeft}>
                   <Box sx={resumoDotSx} />
                   <Box>
-                    <Typography sx={rowLabelStrong}>Especialidades</Typography>
-                    <Typography sx={rowSub}>
-                      {resumo.especialidadesTxt || "—"} • {resumo.dataAgendadaLabel || "—"}
-                      {resumo.horarioTxt ? ` • ${resumo.horarioTxt}` : ""}
+                    <Typography sx={rowLabelStrong}>
+                      Especialidades
                     </Typography>
 
+                    {/* linha logo abaixo com o valor principal */}
+                    <Typography
+                      sx={{
+                        fontSize: 13,
+                        fontWeight: 500,
+                        color: "#111827",
+                        mt: 0.25,
+                      }}
+                    >
+                    </Typography>
+
+                    {/* linha secundária (data / horário) */}
+                    <Typography sx={rowSub}>
+                      {formatDateOnlyBR(resumo.dataAgendadaLabel)}
+                      {resumo.horarioTxt ? ` • ${resumo.horarioTxt}` : ""}
+                    </Typography>
                   </Box>
                 </Box>
 
@@ -557,8 +614,16 @@ const statusMiniIconSx = { ...miniIcon, border: `2px solid ${statusHex}` };
                 />
               </Paper>
 
+
+
               {/* Clínica */}
-              <Paper sx={rowCard}>
+              <Paper
+                sx={{
+                  ...rowCard,
+                  backgroundColor: "#fff",
+                  boxShadow: "none",
+                }}
+              >
                 <Box sx={rowLeft}>
                   <Box sx={resumoDotSx} />
 
@@ -575,8 +640,15 @@ const statusMiniIconSx = { ...miniIcon, border: `2px solid ${statusHex}` };
                 />
               </Paper>
 
+
               {/* Exame */}
-              <Paper sx={rowCard}>
+              <Paper
+                sx={{
+                  ...rowCard,
+                  backgroundColor: "#fff",
+                  boxShadow: "none",
+                }}
+              >
                 <Box sx={rowLeft}>
                   <Box sx={resumoDotSx} />
 
@@ -593,8 +665,15 @@ const statusMiniIconSx = { ...miniIcon, border: `2px solid ${statusHex}` };
                 />
               </Paper>
 
+
               {/* Procedimento */}
-              <Paper sx={rowCard}>
+              <Paper
+                sx={{
+                  ...rowCard,
+                  backgroundColor: "#fff",
+                  boxShadow: "none",
+                }}
+              >
                 <Box sx={rowLeft}>
                   <Box sx={resumoDotSx} />
 
@@ -610,6 +689,7 @@ const statusMiniIconSx = { ...miniIcon, border: `2px solid ${statusHex}` };
                   sx={pillGrey}
                 />
               </Paper>
+
 
               <Divider sx={{ my: 1.6, opacity: 0.35 }} />
 
@@ -701,13 +781,11 @@ const statusMiniIconSx = { ...miniIcon, border: `2px solid ${statusHex}` };
               >
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                   <Typography sx={{ fontWeight: 900, color: "#111827" }}>
-                    Solicitação libera por:
+                    Solicitação liberada por:
                   </Typography>
                 </AccordionSummary>
                 <AccordionDetails>
-                  <Typography sx={{ fontSize: 12.5, color: "#6B7280", mb: 1 }}>
-                    Este bloco é o que “libera” a solicitação no app para o cidadão prosseguir.
-                  </Typography>
+                  
 
                   <TextField
                     label="Usuário logado"
@@ -764,6 +842,7 @@ const statusMiniIconSx = { ...miniIcon, border: `2px solid ${statusHex}` };
                           borderRadius: 2,
                           bgcolor: "#F3F5FF",
                           border: "1px solid rgba(0,0,0,0.06)",
+                          backgroundColor: "#fff"
                         }}
                       >
                         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -775,7 +854,7 @@ const statusMiniIconSx = { ...miniIcon, border: `2px solid ${statusHex}` };
                               bgcolor: dotColor(k),
                             }}
                           />
-                          <Typography sx={{ fontWeight: 900, fontSize: 12.5, color: "#111827" }}>
+                          <Typography sx={{ fontWeight: 900, fontSize: 12.5, color: "#6d6d6d" }}>
                             {labelParecer(k)}
                           </Typography>
                         </Box>

@@ -13,6 +13,10 @@ import {
 } from "@mui/icons-material";
 import { Tooltip } from "@mui/material";
 import HeatPumpIcon from '@mui/icons-material/HeatPump';
+ import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
+ import BoltIcon from '@mui/icons-material/Bolt';
+ import SchoolIcon from '@mui/icons-material/School';
+ import FavoriteIcon from '@mui/icons-material/Favorite';
 
 
 import { useNavigate, Link } from "react-router-dom";
@@ -177,11 +181,11 @@ const SideBar = () => {
 >
   <MenuItem
     component={<Link to="/homesaude" />}
-    icon={<AssessmentIcon sx={{ fontSize: 25 }} />}>
-    SAÚDE
+    icon={<LocalHospitalIcon sx={{ fontSize: 25 }} />}>
+    Saúde
   </MenuItem>
 
-  
+ 
  
 
 
@@ -194,22 +198,30 @@ const SideBar = () => {
 >
   {!collapsed ? (
     <SubMenu
-      open={openProjetos}
-      label="Projetos"
-      icon={<PieChartIcon />}
-      menuItemStyles={{
-        button: {
-          padding: "5px 10px",
-          fontSize: "13px",
-          margin: "1px 0",
-          ":hover": {
-            color: "#22d3ee",
-          },
-        },
-      }}
-    >
+  open={openProjetos}
+  label={
+    <span style={{ lineHeight: 1.1, textAlign: "left" }}>
+      Iluminação<br />pública
+    </span>
+  }
+  icon={<BoltIcon sx={{ fontSize: 32 }} />}
+  menuItemStyles={{
+    button: {
+      padding: "5px 10px",
+      fontSize: "13px",
+      margin: "1px 0",
+      ":hover": {
+        color: "#22d3ee",
+      },
+    },
+  }}
+>
+  
+
+
+      {/**
       <MenuItem
-        component={<Link to="/projetos2" />}
+        component={<Link to="#" />}
         style={{
           padding: "5px 10px",
           fontSize: "13px",
@@ -218,6 +230,7 @@ const SideBar = () => {
       >
         Projetos
       </MenuItem>
+      
 
       <MenuItem
         component={<Link to="/projetos" />}
@@ -229,40 +242,41 @@ const SideBar = () => {
       >
         Planejamento Estratégico
       </MenuItem>
+       */}
     </SubMenu>
   ) : (
     <Tooltip
       title={
         <Box display="flex" flexDirection="column">
           <Link to="/projetos" style={{ color: "#fff", textDecoration: "none", padding: "4px" }}>
-            Todos os Projetos
+            
           </Link>
           <Link
             to="/projetos"
             style={{ color: "#fff", textDecoration: "none", padding: "4px" }}
           >
-            Planejamento Estratégico
+       
           </Link>
         </Box>
       }
       placement="right"
       arrow
     >
-      <MenuItem icon={<PieChartIcon />} />
+      <MenuItem icon={<BoltIcon sx={{ fontSize: 32 }} />} />
     </Tooltip>
   )}
 </div>
 
-<MenuItem component={<Link to="/capaarquivos" />} icon={<SourceIcon />}>
-    Arquivos
+<MenuItem component={<Link to="#" />} icon={<SchoolIcon />}>
+    Educação
   </MenuItem>
 
   <MenuItem component={<Link to="/capatarefas" />} icon={<AssignmentTurnedInIcon />}>
     Tarefas
   </MenuItem>
 
-  <MenuItem component={<Link to="/csc" />} icon={<HeatPumpIcon />}>
-    CSC
+  <MenuItem component={<Link to="/csc" />} icon={<FavoriteIcon />}>
+   Assistência<br />social
   </MenuItem>
 
 
