@@ -176,24 +176,50 @@ export default function RelatoriosSaudeDetalhe() {
 
 
 //
-  async function handleSalvarParecer() {
+async function handleSalvarParecer() {
   if (!id) return;
+
+  const texto = String(justificativa || "").trim();
+
+  // regra simples: recusado precisa de justificativa
+  if (parecer === "recusado" && !texto) {
+    alert("Para RECUSADO, informe a justificativa.");
+    return;
+  }
 
   try {
     setSavingParecer(true);
 
-    await updateDoc(doc(dbArago, "requests", id), {
-      status: parecer,
-      justificativa: String(justificativa || "").trim(),
+   const payload = {
+  status: parecer,
+  parecer: parecer,
+  statusUpdatedAt: serverTimestamp(),
+  statusUpdatedBy: userEmail || authUser?.email || null,
 
-      // auditoria simples
-      updatedAt: serverTimestamp(),
-      updatedByUid: authUser?.uid || null,
-      updatedByEmail: userEmail || null,
-      updatedByName: userNome || null,
-    });
+  // ✅ NOVO: responsável que salvou/liberou (vai aparecer pro cidadão no app)
+  responsavelLiberacao: {
+    uid: authUser?.uid || null,
+    nome: String(userNome || "").trim() || String(userEmail || "").trim(),
+    email: String(userEmail || authUser?.email || "").trim() || null,
+    area: "saude",
+    savedAtMs: Date.now(),
+  },
+};
 
-    alert("Parecer salvo com sucesso!");
+// ✅ grava o texto no campo certo (conforme seu banco)
+if (parecer === "analise") payload.notaAnalise = texto;
+if (parecer === "pendente") payload.notaPendente = texto;
+if (parecer === "recusado") payload.notaRecusado = texto;
+
+// ✅ liberado / concluido: usa justificativa
+if (parecer === "liberado" || parecer === "concluido") {
+  payload.justificativa = texto;
+}
+
+await updateDoc(doc(dbArago, "requests", id), payload);
+
+alert("Parecer salvo com sucesso!");
+
   } catch (e) {
     console.error(e);
     alert("Erro ao salvar parecer. Veja o console.");
@@ -201,6 +227,7 @@ export default function RelatoriosSaudeDetalhe() {
     setSavingParecer(false);
   }
 }
+
 
 
 
@@ -250,9 +277,18 @@ export default function RelatoriosSaudeDetalhe() {
         const data = { id: snap.id, ...snap.data() };
         setReq(data);
 
-        const p = normalizeParecer(data?.status || data?.parecer);
+       const p = normalizeParecer(data?.status || data?.parecer);
         setParecer(p);
-        setJustificativa(String(data?.justificativa || ""));
+
+        // ✅ puxa o texto baseado no status atual
+        const texto =
+          p === "analise" ? data?.notaAnalise :
+          p === "pendente" ? data?.notaPendente :
+          p === "recusado" ? data?.notaRecusado :
+          data?.justificativa;
+
+        setJustificativa(String(texto || ""));
+
 
         setLoading(false);
       },

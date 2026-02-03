@@ -393,7 +393,7 @@ const Relatorios = () => {
       >
         <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
           <PlayCircleFilledIcon sx={{ color: "#5f53e5", fontSize: 25 }} />
-          <Typography color="#858585">RELATÓRIOS</Typography>
+          <Typography color="#858585">SOLICITAÇÕES I EXAMES E CONSULTAS</Typography>
         </Box>
 
         {isModalOpen && (
@@ -455,11 +455,12 @@ const Relatorios = () => {
               </Select>
             </FormControl>
 
+             {/**  
             <FormControl fullWidth size="small">
-              <InputLabel>Category</InputLabel>
+              <InputLabel>Departamento</InputLabel>
               <Select
                 value={categoryFilter}
-                label="Category"
+                label="Departamento"
                 onChange={(e) => {
                   setCategoryFilter(e.target.value);
                   setPage(1);
@@ -472,7 +473,10 @@ const Relatorios = () => {
                 ))}
               </Select>
             </FormControl>
+            */}  
 
+
+            {/** 
             <FormControl fullWidth size="small">
               <InputLabel>Stock</InputLabel>
               <Select
@@ -490,6 +494,7 @@ const Relatorios = () => {
                 ))}
               </Select>
             </FormControl>
+            */}
           </Box>
 
           {/* toolbar */}
@@ -507,7 +512,7 @@ const Relatorios = () => {
           >
             <TextField
               size="small"
-              placeholder="Search Product"
+              placeholder="Buscar"
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
@@ -545,7 +550,7 @@ const Relatorios = () => {
                 }}
                 onClick={() => console.log("Export (mock)")}
               >
-                Export
+                Exportar
               </Button>
 
               <Button
@@ -564,7 +569,7 @@ const Relatorios = () => {
                 }}
                 onClick={() => console.log("Add Product (mock)")}
               >
-                Add Product
+                Add Solicitação
               </Button>
             </Box>
           </Box>
