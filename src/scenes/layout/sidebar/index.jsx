@@ -271,11 +271,11 @@ const SideBar = () => {
     Educação
   </MenuItem>
 
-  <MenuItem component={<Link to="/capatarefas" />} icon={<AssignmentTurnedInIcon />}>
+  <MenuItem component={<Link to="#" />} icon={<AssignmentTurnedInIcon />}>
     Tarefas
   </MenuItem>
 
-  <MenuItem component={<Link to="/csc" />} icon={<FavoriteIcon />}>
+  <MenuItem component={<Link to="#" />} icon={<FavoriteIcon />}>
    Assistência<br />social
   </MenuItem>
 
