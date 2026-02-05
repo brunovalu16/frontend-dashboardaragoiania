@@ -20,6 +20,36 @@ const roleToLabelMap = {
   "51": "Red Bull",
 };
 
+/** =========================
+ *  DADOS REAIS – ARAGOIÂNIA
+ *  Fontes: IBGE + site oficial
+ *  ========================= */
+const aragoiania = {
+  nome: "Aragoiânia",
+  uf: "GO",
+  codigoIBGE: "5201801",
+
+  // IBGE (Cidades e Estados)
+  areaKm2: 218.125, // [2024]
+  populacaoCenso: 11890, // [2022]
+  densidadeHabKm2: 54.51, // [2022]
+  populacaoEstimada: 12806, // [2025]
+  escolarizacao6a14: 91.12, // % [2022]
+  idhm2010: 0.684, // [2010]
+  mortalidadeInfantil: 9.71, // por mil NV [2023]
+  receitasBrutas: 71148567.84, // R$ [2024]
+  despesasBrutas: 67986131.65, // R$ [2024]
+  pibPerCapita: 20007.46, // R$ [2023]
+
+  // Prefeitura (Fale Conosco)
+  atendimento: {
+    telefone: "(62) 9 9663-0183",
+    email: "administracao@aragoiania.go.gov.br",
+    endereco: "Praça da Matriz, nº 37, Centro, Aragoiânia - GO. CEP: 75330-000",
+    horario: "Seg–Sex 08h–11h e 13h–17h",
+  },
+};
+
 const cardBase = {
   bgcolor: "#fff",
   borderRadius: "14px",
@@ -28,7 +58,6 @@ const cardBase = {
 };
 
 function MiniBars({ height = 54 }) {
-  // barras fake para “parecer gráfico”
   const bars = [18, 26, 12, 30, 22, 34, 16, 28, 20, 36];
   return (
     <Box sx={{ display: "flex", alignItems: "flex-end", gap: 0.9, height }}>
@@ -48,14 +77,12 @@ function MiniBars({ height = 54 }) {
 }
 
 function MiniLine({ height = 60 }) {
-  // linha fake (gradiente)
   return (
     <Box
       sx={{
         height,
         borderRadius: 2,
-        background:
-          "linear-gradient(180deg, rgba(115,103,240,0.20), rgba(115,103,240,0.02))",
+        background: "linear-gradient(180deg, rgba(115,103,240,0.20), rgba(115,103,240,0.02))",
         position: "relative",
         overflow: "hidden",
       }}
@@ -105,6 +132,11 @@ function DonutMock() {
   );
 }
 
+const formatBRL = (value) =>
+  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
+
+const formatNumber = (value) => new Intl.NumberFormat("pt-BR").format(value);
+
 export default function Home() {
   const [userRole, setUserRole] = useState("");
 
@@ -118,25 +150,19 @@ export default function Home() {
     [userRole]
   );
 
+  // mantém sua regra atual: indústria vai pro painelindustrias, demais pro relatorios
   const destinoPrincipal = isIndustria ? "/painelindustrias" : "/relatorios";
 
+  // % “equilíbrio fiscal” (mock visual) com base em receitas x despesas
+  const execPercent = Math.max(
+    0,
+    Math.min(100, Math.round((aragoiania.despesasBrutas / aragoiania.receitasBrutas) * 100))
+  );
+
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        backgroundColor: "#F5F6FA",
-        padding: "22px",
-      }}
-    >
-      {/* GRID PRINCIPAL (igual a imagem) */}
-      <Box
-        sx={{
-          display: "grid",
-          gridTemplateColumns: "repeat(12, 1fr)",
-          gap: "18px",
-        }}
-      >
-        {/* CARD GRANDE ROXO - esquerda topo */}
+    <Box sx={{ minHeight: "100vh", backgroundColor: "#F5F6FA", padding: "22px" }}>
+      <Box sx={{ display: "grid", gridTemplateColumns: "repeat(12, 1fr)", gap: "18px" }}>
+        {/* CARD GRANDE ROXO */}
         <Box
           component={Link}
           to={destinoPrincipal}
@@ -163,36 +189,39 @@ export default function Home() {
               background: "rgba(255,255,255,0.12)",
             }}
           />
+
           <Typography sx={{ color: "#fff", fontWeight: 800, fontSize: 16 }}>
-            Website Analytics
+            Painel de Indicadores — {aragoiania.nome}/{aragoiania.uf}
           </Typography>
           <Typography sx={{ color: "rgba(255,255,255,0.75)", fontSize: 12, mt: 0.3 }}>
-            Total 28.5% Conversion Rate
+            Código IBGE {aragoiania.codigoIBGE} • População estimada {formatNumber(aragoiania.populacaoEstimada)} (2025)
           </Typography>
 
           <Box sx={{ display: "flex", gap: 4, mt: 2.2, alignItems: "flex-end" }}>
             <Box>
               <Typography sx={{ color: "rgba(255,255,255,0.75)", fontSize: 11 }}>
-                Spent
+                Área territorial
               </Typography>
               <Typography sx={{ color: "#fff", fontWeight: 800, fontSize: 18 }}>
-                12h
+                {formatNumber(aragoiania.areaKm2)} km²
               </Typography>
             </Box>
+
             <Box>
               <Typography sx={{ color: "rgba(255,255,255,0.75)", fontSize: 11 }}>
-                Order
+                População (Censo 2022)
               </Typography>
               <Typography sx={{ color: "#fff", fontWeight: 800, fontSize: 18 }}>
-                127
+                {formatNumber(aragoiania.populacaoCenso)}
               </Typography>
             </Box>
+
             <Box>
               <Typography sx={{ color: "rgba(255,255,255,0.75)", fontSize: 11 }}>
-                Items
+                Densidade (2022)
               </Typography>
               <Typography sx={{ color: "#fff", fontWeight: 800, fontSize: 18 }}>
-                18
+                {String(aragoiania.densidadeHabKm2).replace(".", ",")} hab/km²
               </Typography>
             </Box>
           </Box>
@@ -212,21 +241,15 @@ export default function Home() {
             border: "none",
           }}
         >
-          <Box
-            sx={{
-              ...cardBase,
-              gridColumn: "span 8",
-              padding: "16px",
-            }}
-          >
+          <Box sx={{ ...cardBase, gridColumn: "span 8", padding: "16px" }}>
             <Typography sx={{ fontWeight: 800, fontSize: 13, color: "#2F2B3D" }}>
-              Average Daily Sales
+              Finanças Públicas — Receitas (2024)
             </Typography>
             <Typography sx={{ fontSize: 12, color: "#6F6B7D", mt: 0.3 }}>
-              Total Sales This Month
+              Total de receitas brutas realizadas
             </Typography>
             <Typography sx={{ fontWeight: 900, fontSize: 20, mt: 1 }}>
-              $28,450
+              {formatBRL(aragoiania.receitasBrutas)}
             </Typography>
             <Box sx={{ mt: 1.2 }}>
               <MiniLine />
@@ -245,10 +268,10 @@ export default function Home() {
           >
             <Box>
               <Typography sx={{ fontWeight: 800, fontSize: 13, color: "#2F2B3D" }}>
-                Sales Overview
+                Despesas (2024)
               </Typography>
-              <Typography sx={{ fontWeight: 900, fontSize: 18, mt: 0.6 }}>
-                $42.5k
+              <Typography sx={{ fontWeight: 900, fontSize: 15, mt: 0.6 }}>
+                {formatBRL(aragoiania.despesasBrutas)}
               </Typography>
             </Box>
 
@@ -260,52 +283,47 @@ export default function Home() {
                 overflow: "hidden",
               }}
             >
-              <Box sx={{ width: "62%", height: "100%", bgcolor: "rgba(115,103,240,0.95)" }} />
+              <Box
+                sx={{
+                  width: `${execPercent}%`,
+                  height: "100%",
+                  bgcolor: "rgba(115,103,240,0.95)",
+                }}
+              />
             </Box>
 
             <Typography sx={{ fontSize: 12, color: "#22C55E", fontWeight: 700 }}>
-              +18.2%
+              Execução: {execPercent}%
             </Typography>
           </Box>
         </Box>
 
-        {/* ROW 2: Earnings / Support */}
-        <Box
-          sx={{
-            ...cardBase,
-            gridColumn: { xs: "span 12", md: "span 7" },
-            padding: "16px",
-          }}
-        >
+        {/* ROW 2: Indicadores sociais / Atendimento */}
+        <Box sx={{ ...cardBase, gridColumn: { xs: "span 12", md: "span 7" }, padding: "16px" }}>
           <Typography sx={{ fontWeight: 800, fontSize: 13, color: "#2F2B3D" }}>
-            Earning Reports
+            Indicadores Sociais (IBGE)
           </Typography>
           <Typography sx={{ fontSize: 12, color: "#6F6B7D", mt: 0.3 }}>
-            Weekly Earnings Overview
+            Educação • Desenvolvimento Humano • Saúde
           </Typography>
 
           <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
             <Box>
-              <Typography sx={{ fontWeight: 900, fontSize: 22 }}>$468</Typography>
-              <Typography sx={{ fontSize: 12, color: "#22C55E", fontWeight: 700 }}>
-                +4.2%
+              <Typography sx={{ fontWeight: 900, fontSize: 22 }}>
+                IDHM {String(aragoiania.idhm2010).replace(".", ",")}
+              </Typography>
+              <Typography sx={{ fontSize: 12, color: "#6F6B7D" }}>
+                Índice de desenvolvimento humano (2010)
               </Typography>
             </Box>
             <MiniBars />
           </Box>
 
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: "repeat(3, 1fr)",
-              gap: 2,
-              mt: 2,
-            }}
-          >
+          <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 2, mt: 2 }}>
             {[
-              ["Earnings", "$545.69"],
-              ["Profit", "$256.34"],
-              ["Expense", "$74.19"],
+              ["Escolarização 6–14", `${String(aragoiania.escolarizacao6a14).replace(".", ",")}%`],
+              ["Mortalidade infantil", `${String(aragoiania.mortalidadeInfantil).replace(".", ",")}‰`],
+              ["PIB per capita", formatBRL(aragoiania.pibPerCapita)],
             ].map(([t, v]) => (
               <Box
                 key={t}
@@ -336,24 +354,38 @@ export default function Home() {
         >
           <Box>
             <Typography sx={{ fontWeight: 800, fontSize: 13, color: "#2F2B3D" }}>
-              Support Tracker
+              Atendimento ao Cidadão
             </Typography>
             <Typography sx={{ fontSize: 12, color: "#6F6B7D", mt: 0.3 }}>
-              Last 7 Days
+              Contatos oficiais — Prefeitura
             </Typography>
 
-            <Typography sx={{ fontWeight: 900, fontSize: 28, mt: 2 }}>164</Typography>
-            <Typography sx={{ fontSize: 12, color: "#6F6B7D" }}>Total Tickets</Typography>
+            <Typography sx={{ fontWeight: 900, fontSize: 20, mt: 2 }}>
+              {aragoiania.atendimento.telefone}
+            </Typography>
+            <Typography sx={{ fontSize: 12, color: "#6F6B7D" }}>Telefone</Typography>
 
             <Box sx={{ mt: 2, display: "grid", gap: 1 }}>
               {[
-                ["New Tickets", "142"],
-                ["Open Tickets", "28"],
-                ["Response Time", "1 Day"],
+                ["E-mail", aragoiania.atendimento.email],
+                ["Horário", aragoiania.atendimento.horario],
+                ["Endereço", aragoiania.atendimento.endereco],
               ].map(([k, v]) => (
                 <Box key={k} sx={{ display: "flex", justifyContent: "space-between", gap: 2 }}>
-                  <Typography sx={{ fontSize: 12, color: "#6F6B7D" }}>{k}</Typography>
-                  <Typography sx={{ fontSize: 12, fontWeight: 800, color: "#2F2B3D" }}>
+                  <Typography sx={{ fontSize: 12, color: "#6F6B7D", minWidth: 70 }}>{k}</Typography>
+                  <Typography
+                    sx={{
+                      fontSize: 12,
+                      fontWeight: 800,
+                      color: "#2F2B3D",
+                      textAlign: "right",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                      maxWidth: 240,
+                    }}
+                    title={v}
+                  >
                     {v}
                   </Typography>
                 </Box>
@@ -364,28 +396,22 @@ export default function Home() {
           <DonutMock />
         </Box>
 
-        {/* ROW 3: lista + gráfico + rate */}
-        <Box
-          sx={{
-            ...cardBase,
-            gridColumn: { xs: "span 12", md: "span 4" },
-            padding: "16px",
-          }}
-        >
+        {/* ROW 3 */}
+        <Box sx={{ ...cardBase, gridColumn: { xs: "span 12", md: "span 4" }, padding: "16px" }}>
           <Typography sx={{ fontWeight: 800, fontSize: 13, color: "#2F2B3D" }}>
-            Sales by Countries
+            Acesso Rápido (Prefeitura)
           </Typography>
           <Typography sx={{ fontSize: 12, color: "#6F6B7D", mt: 0.3 }}>
-            Monthly Sales Overview
+            Serviços principais e transparência
           </Typography>
 
           <Box sx={{ mt: 2, display: "grid", gap: 1.3 }}>
             {[
-              ["United States", "$8.567k", "+25.8%"],
-              ["Brazil", "$2.415k", "-6.2%"],
-              ["India", "$865k", "+12.4%"],
-              ["France", "$745k", "-1.9%"],
-            ].map(([c, v, p]) => (
+              ["Nota Fiscal", "Emissão e dúvidas"],
+              ["IPTU", "Emissão de guia"],
+              ["Certidão Negativa", "Consulta rápida"],
+              ["Ouvidoria / SIC", "Solicitações e acompanhamento"],
+            ].map(([c, v]) => (
               <Box
                 key={c}
                 sx={{
@@ -401,34 +427,22 @@ export default function Home() {
                   <Typography sx={{ fontSize: 12, fontWeight: 800 }}>{c}</Typography>
                   <Typography sx={{ fontSize: 12, color: "#6F6B7D" }}>{v}</Typography>
                 </Box>
-                <Typography
-                  sx={{
-                    fontSize: 12,
-                    fontWeight: 800,
-                    color: p.startsWith("-") ? "#EF4444" : "#22C55E",
-                  }}
-                >
-                  {p}
-                </Typography>
+                <Typography sx={{ fontSize: 12, fontWeight: 800, color: "#22C55E" }}>OK</Typography>
               </Box>
             ))}
           </Box>
         </Box>
 
-        <Box
-          sx={{
-            ...cardBase,
-            gridColumn: { xs: "span 12", md: "span 4" },
-            padding: "16px",
-          }}
-        >
+        <Box sx={{ ...cardBase, gridColumn: { xs: "span 12", md: "span 4" }, padding: "16px" }}>
           <Typography sx={{ fontWeight: 800, fontSize: 13, color: "#2F2B3D" }}>
-            Total Earning
+            PIB per capita (IBGE)
           </Typography>
 
-          <Typography sx={{ fontWeight: 900, fontSize: 28, mt: 1 }}>87%</Typography>
+          <Typography sx={{ fontWeight: 900, fontSize: 28, mt: 1 }}>
+            {formatBRL(aragoiania.pibPerCapita)}
+          </Typography>
           <Typography sx={{ fontSize: 12, color: "#22C55E", fontWeight: 700 }}>
-            +25.8%
+            Referência: 2023
           </Typography>
 
           <Box sx={{ mt: 2 }}>
@@ -436,59 +450,38 @@ export default function Home() {
           </Box>
         </Box>
 
-        <Box
-          sx={{
-            ...cardBase,
-            gridColumn: { xs: "span 12", md: "span 4" },
-            padding: "16px",
-          }}
-        >
+        <Box sx={{ ...cardBase, gridColumn: { xs: "span 12", md: "span 4" }, padding: "16px" }}>
           <Typography sx={{ fontWeight: 800, fontSize: 13, color: "#2F2B3D" }}>
-            Monthly Campaign State
+            Educação & Saúde (IBGE)
           </Typography>
 
           <Box sx={{ mt: 2, display: "grid", gap: 1.2 }}>
             {[
-              ["Emails", "12,346", "+0.3%"],
-              ["Opened", "8,734", "+2.1%"],
-              ["Clicked", "967", "+1.6%"],
-              ["Subscribe", "345", "+4.8%"],
-            ].map(([k, v, p]) => (
+              ["Escolarização 6–14", `${String(aragoiania.escolarizacao6a14).replace(".", ",")}% (2022)`],
+              ["Mortalidade infantil", `${String(aragoiania.mortalidadeInfantil).replace(".", ",")}‰ (2023)`],
+              ["População estimada", `${formatNumber(aragoiania.populacaoEstimada)} (2025)`],
+              ["Densidade demográfica", `${String(aragoiania.densidadeHabKm2).replace(".", ",")} hab/km² (2022)`],
+            ].map(([k, v]) => (
               <Box key={k} sx={{ display: "flex", justifyContent: "space-between" }}>
                 <Typography sx={{ fontSize: 12, color: "#6F6B7D" }}>{k}</Typography>
                 <Box sx={{ display: "flex", gap: 1.5, alignItems: "center" }}>
                   <Typography sx={{ fontSize: 12, fontWeight: 800 }}>{v}</Typography>
-                  <Typography
-                    sx={{
-                      fontSize: 12,
-                      fontWeight: 800,
-                      color: p.startsWith("-") ? "#EF4444" : "#22C55E",
-                    }}
-                  >
-                    {p}
-                  </Typography>
                 </Box>
               </Box>
             ))}
           </Box>
         </Box>
 
-        {/* ROW FINAL: tabela "Project List" */}
-        <Box
-          sx={{
-            ...cardBase,
-            gridColumn: "span 12",
-            padding: "16px",
-          }}
-        >
+        {/* ROW FINAL: tabela */}
+        <Box sx={{ ...cardBase, gridColumn: "span 12", padding: "16px" }}>
           <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
             <Typography sx={{ fontWeight: 900, fontSize: 14, color: "#2F2B3D" }}>
-              Project List
+              Painel de Gestão — {aragoiania.nome}/{aragoiania.uf}
             </Typography>
 
             <Box
               sx={{
-                width: 240,
+                width: 280,
                 height: 34,
                 borderRadius: 999,
                 border: "1px solid rgba(0,0,0,0.08)",
@@ -500,7 +493,7 @@ export default function Home() {
                 fontSize: 12,
               }}
             >
-              Search Project
+              Buscar serviço / secretaria
             </Box>
           </Box>
 
@@ -508,7 +501,7 @@ export default function Home() {
           <Box
             sx={{
               display: "grid",
-              gridTemplateColumns: "2fr 1fr 1.2fr 1fr 0.6fr",
+              gridTemplateColumns: "2.2fr 1.2fr 1.2fr 1.2fr 0.6fr",
               gap: 2,
               px: 1,
               py: 1,
@@ -518,25 +511,25 @@ export default function Home() {
               fontWeight: 800,
             }}
           >
-            <Box>PROJECT</Box>
-            <Box>LEADER</Box>
-            <Box>TEAM</Box>
-            <Box>PROGRESS</Box>
-            <Box>ACTION</Box>
+            <Box>ÁREA / SERVIÇO</Box>
+            <Box>RESPONSÁVEL</Box>
+            <Box>FOCO</Box>
+            <Box>STATUS</Box>
+            <Box>AÇÃO</Box>
           </Box>
 
           {[
-            ["Website SEO", "Eileen", "•••", "38%"],
-            ["Social Banners", "Owen", "•••", "45%"],
-            ["Logo Designs", "Keith", "•••", "92%"],
-            ["IOS App Design", "Melanie", "•••", "56%"],
-            ["Figma Dashboard", "Harmonia", "•••", "25%"],
+            ["Ouvidoria / SIC", "Ouvidoria", "Atendimento", "85%"],
+            ["Nota Fiscal (NFS-e)", "Finanças", "Serviços", "62%"],
+            ["IPTU (Guia)", "Finanças", "Arrecadação", "74%"],
+            ["Educação", "SME", "Escolas", "56%"],
+            ["Saúde", "SMS", "ESFs", "68%"],
           ].map((row, idx) => (
             <Box
               key={idx}
               sx={{
                 display: "grid",
-                gridTemplateColumns: "2fr 1fr 1.2fr 1fr 0.6fr",
+                gridTemplateColumns: "2.2fr 1.2fr 1.2fr 1.2fr 0.6fr",
                 gap: 2,
                 px: 1,
                 py: 1.2,
@@ -562,13 +555,7 @@ export default function Home() {
                     overflow: "hidden",
                   }}
                 >
-                  <Box
-                    sx={{
-                      width: row[3],
-                      height: "100%",
-                      bgcolor: "rgba(115,103,240,0.95)",
-                    }}
-                  />
+                  <Box sx={{ width: row[3], height: "100%", bgcolor: "rgba(115,103,240,0.95)" }} />
                 </Box>
                 <Typography sx={{ fontSize: 12, fontWeight: 800, color: "#6F6B7D" }}>
                   {row[3]}
