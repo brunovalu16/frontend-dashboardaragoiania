@@ -179,6 +179,15 @@ const SideBar = () => {
     },
   }}
 >
+
+   <MenuItem
+    component={<Link to="/home" />}
+    icon={<HomeIcon sx={{ fontSize: 25 }} />}>
+    Home
+  </MenuItem>
+  
+
+
   <MenuItem
     component={<Link to="/homesaude" />}
     icon={<LocalHospitalIcon sx={{ fontSize: 25 }} />}>

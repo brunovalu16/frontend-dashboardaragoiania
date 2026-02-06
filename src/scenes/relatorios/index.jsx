@@ -17,6 +17,9 @@ import {
 import { collection, query, where, orderBy, onSnapshot } from "firebase/firestore";
 import LinearProgress from "@mui/material/LinearProgress";
 
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+
+
 import { Header } from "../../components";
 import { onAuthStateChanged } from "firebase/auth";
 
@@ -307,8 +310,10 @@ const Relatorios = () => {
         !s ||
         r.product.toLowerCase().includes(s) ||
         r.desc.toLowerCase().includes(s) ||
-        r.sku.toLowerCase().includes(s);
-        String(r.userEmail || "").toLowerCase().includes(s);
+        r.sku.toLowerCase().includes(s) ||
+        String(r.userEmail || "").toLowerCase().includes(s) ||
+        String(r.userName || "").toLowerCase().includes(s);
+
 
       const matchStatus = statusFilter === "Status" ? true : r.status === statusFilter;
 
@@ -339,6 +344,34 @@ const Relatorios = () => {
     const start = (page - 1) * pageSize;
     return filtered.slice(start, start + pageSize);
   }, [filtered, page, pageSize]);
+
+
+
+  const resumo = useMemo(() => {
+  const base = filtered; // ou rows, se quiser ignorar filtros
+  const total = base.length;
+
+  const counts = base.reduce(
+    (acc, r) => {
+      acc[r.status] = (acc[r.status] || 0) + 1;
+      return acc;
+    },
+    { analise: 0, pendente: 0, recusado: 0, liberado: 0, concluido: 0 }
+  );
+
+  const pct = (n) => (total ? Math.round((n / total) * 100) : 0);
+
+  return {
+    total,
+    ...counts,
+    pAnalise: pct(counts.analise),
+    pPendente: pct(counts.pendente),
+    pRecusado: pct(counts.recusado),
+    pLiberado: pct(counts.liberado),
+    pConcluido: pct(counts.concluido),
+  };
+}, [filtered]);
+
 
   // ✅ pill com cores do print
   const statusPill = (statusKey) => {
@@ -376,6 +409,10 @@ const Relatorios = () => {
       <Box sx={{ marginLeft: "40px" }}>
         <Header title={<Box display="flex" alignItems="center" gap={1} />} />
       </Box>
+
+
+
+      
 
       <Box
         sx={{
@@ -423,6 +460,155 @@ const Relatorios = () => {
             </Typography>
           </Box>
         )}
+
+
+
+
+{/* Botão voltar */}
+<Box
+  sx={{
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "flex-end", // 👈 joga pra direita
+    mb: 1.2,
+  }}
+>
+  <Button
+    variant="outlined"
+    startIcon={<ArrowBackIcon />}
+    onClick={() => navigate("/Homesaude")}
+    sx={{
+      height: 36,
+      borderRadius: 1.5,
+      textTransform: "none",
+      borderColor: "rgba(0,0,0,0.14)",
+      color: "#fff",
+      bgcolor: "#4b0f8a",
+      "&:hover": { bgcolor: "#4b0f8a" },
+    }}
+  >
+    Voltar
+  </Button>
+</Box>
+
+
+
+
+ {/* --- RELATÓRIO CONSOLIDADO (mockup) --- */}
+{/* --- RELATÓRIO CONSOLIDADO (mockup) --- */}
+<Box sx={{ mt: 2.2 }}>
+  <Typography sx={{ fontWeight: 900, color: "#2F2B3D", mb: 1 }}>
+    CONSOLIDADO EXAMES E CONSULTAS
+  </Typography>
+
+  <Box
+    sx={{
+      display: "flex",
+      gap: 2,
+      width: "100%",
+      pb: 1,
+
+      overflowX: "auto",     // ✅ se não couber, rola
+      flexWrap: "nowrap",    // ✅ nunca quebra linha
+      WebkitOverflowScrolling: "touch",
+    }}
+  >
+    {[
+      { key: "analise", label: "ANÁLISE", value: resumo.analise, pct: resumo.pAnalise },
+      { key: "pendente", label: "PENDENTE", value: resumo.pendente, pct: resumo.pPendente },
+      { key: "recusado", label: "RECUSADO", value: resumo.recusado, pct: resumo.pRecusado },
+      { key: "liberado", label: "LIBERADO", value: resumo.liberado, pct: resumo.pLiberado },
+      { key: "concluido", label: "CONCLUÍDO", value: resumo.concluido, pct: resumo.pConcluido },
+    ].map((c) => {
+      const color = statusColor(c.key);
+
+      return (
+        <Box
+          key={c.key}
+          sx={{
+            ...cardBase,
+            p: 2,
+            borderRadius: "16px",
+
+            flex: "1 1 0",  // ✅ divide igualmente e mantém 1 linha
+            minWidth: 240,  // ✅ tamanho mínimo (ajuste se quiser)
+          }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <Typography sx={{ fontSize: 12, fontWeight: 900, color: "#6F6B7D" }}>
+              {c.label}
+            </Typography>
+
+            {/* bolinha mais grossa (anel) */}
+            <Box
+              sx={{
+                width: 55, // externo maior
+                height: 55,
+                borderRadius: "50%",
+                display: "grid",
+                placeItems: "center",
+                background: `conic-gradient(${color} ${c.pct * 3.6}deg, rgba(0,0,0,0.08) 0deg)`,
+              }}
+            >
+              <Box
+                sx={{
+                  width: 28, // interno menor => anel mais grosso
+                  height: 28,
+                  borderRadius: "50%",
+                  bgcolor: "#fff",
+                  display: "grid",
+                  placeItems: "center",
+                  fontSize: 11,
+                  fontWeight: 900,
+                  color: "#6F6B7D",
+                }}
+              >
+                {c.pct}%
+              </Box>
+            </Box>
+          </Box>
+
+          <Typography sx={{ mt: 1, fontSize: 26, fontWeight: 900, color: "#2F2B3D" }}>
+            {c.value}
+          </Typography>
+
+          <Typography sx={{ mt: 0.5, fontSize: 12, color: "#6F6B7D" }}>
+            de {resumo.total} solicitações
+          </Typography>
+
+          <Box sx={{ mt: 1.2 }}>
+            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <Typography sx={{ fontSize: 12, color: "#6F6B7D" }}>Progresso</Typography>
+              <Typography sx={{ fontSize: 12, fontWeight: 900, color }}>
+                {c.pct}%
+              </Typography>
+            </Box>
+
+            <Box
+              sx={{
+                mt: 0.8,
+                height: 8,
+                borderRadius: 999,
+                bgcolor: "rgba(0,0,0,0.08)",
+                overflow: "hidden",
+              }}
+            >
+              <Box
+                sx={{
+                  height: "100%",
+                  width: `${c.pct}%`,
+                  bgcolor: color,
+                }}
+              />
+            </Box>
+          </Box>
+        </Box>
+      );
+    })}
+  </Box>
+</Box>
+
+
 
         {/* FILTER Card */}
         <Box sx={{ ...cardBase, p: 2.2, mb: 2 }}>
@@ -755,6 +941,9 @@ const Relatorios = () => {
               </Box>
             </Box>
           </Box>
+
+
+
 
           
         </Box>

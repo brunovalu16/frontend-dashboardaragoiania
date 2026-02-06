@@ -14,12 +14,57 @@ import {
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import AddBoxOutlinedIcon from "@mui/icons-material/AddBoxOutlined";
+import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
+
+import { onAuthStateChanged } from "firebase/auth";
+import { collection, onSnapshot, query, where } from "firebase/firestore";
+import { authArago, dbArago } from "/src/data/firebase-config.js";
+
 
 import { useNavigate } from "react-router-dom";
 
 import { useLocation } from "react-router-dom";
 
 import capaSaude from "../../assets/images/medico.png";
+
+
+//============================================================================================
+
+
+function normalizeStatus(v) {
+  const s = String(v || "analise").toLowerCase();
+  if (s.includes("anal")) return "analise";
+  if (s.includes("pend")) return "pendente";
+  if (s.includes("recus")) return "recusado";
+  if (s.includes("liber")) return "liberado";
+  if (s.includes("concl")) return "concluido";
+  return "analise";
+}
+
+function statusLabelPt(k) {
+  const map = {
+    analise: "ANÁLISE",
+    pendente: "PENDENTE",
+    recusado: "RECUSADO",
+    liberado: "LIBERADO",
+    concluido: "CONCLUÍDO",
+  };
+  return map[k] || "ANÁLISE";
+}
+
+function statusColor(k) {
+  const map = {
+    analise: "#f59e0b",
+    pendente: "#ef4444",
+    recusado: "#b91c1c",
+    liberado: "#22c55e",
+    concluido: "#6b7280",
+  };
+  return map[k] || "#f59e0b";
+}
+
+
+//============================================================================================
 
 
 const Homesaude = () => {
@@ -36,13 +81,42 @@ const Homesaude = () => {
   const [selectedItem, setSelectedItem] = useState(null);
 // selectedItem = { id, label, to, side: "left" | "right" }
 
-
+const [requestsSaude, setRequestsSaude] = useState([]);
 
   const { state } = useLocation();
 // state.setorId
 // state.setorLabel
 
   const navigate = useNavigate();
+
+
+
+  const resumo = useMemo(() => {
+  const base = requestsSaude || [];
+  const total = base.length;
+
+  const counts = base.reduce(
+    (acc, r) => {
+      const st = normalizeStatus(r?.status || r?.parecer);
+      acc[st] = (acc[st] || 0) + 1;
+      return acc;
+    },
+    { analise: 0, pendente: 0, recusado: 0, liberado: 0, concluido: 0 }
+  );
+
+  const pct = (n) => (total ? Math.round((n / total) * 100) : 0);
+
+  return {
+    total,
+    ...counts,
+    pAnalise: pct(counts.analise),
+    pPendente: pct(counts.pendente),
+    pRecusado: pct(counts.recusado),
+    pLiberado: pct(counts.liberado),
+    pConcluido: pct(counts.concluido),
+  };
+}, [requestsSaude]);
+
 
   useEffect(() => {
     const role = localStorage.getItem("userRole");
@@ -142,8 +216,168 @@ const Homesaude = () => {
     transition: "height .18s ease",
   });
 
+
+
+  useEffect(() => {
+  let stop = null;
+
+  const unsubAuth = onAuthStateChanged(authArago, (u) => {
+    if (stop) stop();
+
+    // se quiser mostrar mesmo deslogado, pode remover esse if
+    if (!u?.email) {
+      setRequestsSaude([]);
+      return;
+    }
+
+    // ✅ geral (todas solicitações de saúde)
+    // se quiser por usuário, eu te mando a versão filtrando por userEmail
+    const q = query(collection(dbArago, "requests"), where("areaId", "==", "saude"));
+
+    stop = onSnapshot(q, (snap) => {
+      const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      setRequestsSaude(list);
+    });
+  });
+
+  return () => {
+    if (stop) stop();
+    unsubAuth();
+  };
+}, []);
+
+
+
+const cardBase = {
+  backgroundColor: "#fff",
+  borderRadius: "14px",
+  border: "1px solid rgba(0,0,0,0.06)",
+  boxShadow: "0 10px 24px rgba(0,0,0,0.06)",
+};
+
+
   return (
     <Box sx={{ px: { xs: 1.5, md: 5 }, py: { xs: 2, md: 3 } }}>
+
+
+
+      {/* --- RELATÓRIO CONSOLIDADO (mockup) --- */}
+    <Box sx={{ mt: 0, mb: 2 }}>
+      <Typography sx={{ fontWeight: 900, color: "#2F2B3D", mb: 1 }}>
+        CONSOLIDADO SETORES DA SAÚDE
+      </Typography>
+
+      <Box
+        sx={{
+          display: "flex",
+          gap: 2,
+          width: "100%",
+          pb: 1,
+
+          overflowX: "auto",     // ✅ se não couber, rola
+          flexWrap: "nowrap",    // ✅ nunca quebra linha
+          WebkitOverflowScrolling: "touch",
+        }}
+      >
+        {[
+          { key: "analise", label: "ANÁLISE", value: resumo.analise, pct: resumo.pAnalise },
+          { key: "pendente", label: "PENDENTE", value: resumo.pendente, pct: resumo.pPendente },
+          { key: "recusado", label: "RECUSADO", value: resumo.recusado, pct: resumo.pRecusado },
+          { key: "liberado", label: "LIBERADO", value: resumo.liberado, pct: resumo.pLiberado },
+          { key: "concluido", label: "CONCLUÍDO", value: resumo.concluido, pct: resumo.pConcluido },
+        ].map((c) => {
+          const color = statusColor(c.key);
+
+          return (
+            <Box
+              key={c.key}
+              sx={{
+                ...cardBase,
+                p: 2,
+                borderRadius: "16px",
+
+                flex: "1 1 0",  // ✅ divide igualmente e mantém 1 linha
+                minWidth: 240,  // ✅ tamanho mínimo (ajuste se quiser)
+              }}
+            >
+              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <Typography sx={{ fontSize: 12, fontWeight: 900, color: "#6F6B7D" }}>
+                  {c.label}
+                </Typography>
+
+                {/* bolinha mais grossa (anel) */}
+                <Box
+                  sx={{
+                    width: 55, // externo maior
+                    height: 55,
+                    borderRadius: "50%",
+                    display: "grid",
+                    placeItems: "center",
+                    background: `conic-gradient(${color} ${c.pct * 3.6}deg, rgba(0,0,0,0.08) 0deg)`,
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: 28, // interno menor => anel mais grosso
+                      height: 28,
+                      borderRadius: "50%",
+                      bgcolor: "#fff",
+                      display: "grid",
+                      placeItems: "center",
+                      fontSize: 11,
+                      fontWeight: 900,
+                      color: "#6F6B7D",
+                    }}
+                  >
+                    {c.pct}%
+                  </Box>
+                </Box>
+              </Box>
+
+              <Typography sx={{ mt: 1, fontSize: 26, fontWeight: 900, color: "#2F2B3D" }}>
+                {c.value}
+              </Typography>
+
+              <Typography sx={{ mt: 0.5, fontSize: 12, color: "#6F6B7D" }}>
+                de {resumo.total} solicitações
+              </Typography>
+
+              <Box sx={{ mt: 1.2 }}>
+                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <Typography sx={{ fontSize: 12, color: "#6F6B7D" }}>Progresso</Typography>
+                  <Typography sx={{ fontSize: 12, fontWeight: 900, color }}>
+                    {c.pct}%
+                  </Typography>
+                </Box>
+
+                <Box
+                  sx={{
+                    mt: 0.8,
+                    height: 8,
+                    borderRadius: 999,
+                    bgcolor: "rgba(0,0,0,0.08)",
+                    overflow: "hidden",
+                  }}
+                >
+                  <Box
+                    sx={{
+                      height: "100%",
+                      width: `${c.pct}%`,
+                      bgcolor: color,
+                    }}
+                  />
+                </Box>
+              </Box>
+            </Box>
+          );
+        })}
+      </Box>
+    </Box>
+
+
+
+
+
   <Box sx={CardShell}>
     {/* ✅ trava altura no desktop para não “empurrar” a página */}
     <Grid container sx={{ height: { xs: "auto", md: 430 } }}>
@@ -173,17 +407,15 @@ const Homesaude = () => {
           <Box sx={RightHeader}>
             <Box
               sx={{
-                width: 34,
-                height: 34,
+                width: 30,
+                height: 30,
                 borderRadius: 2,
                 display: "grid",
                 placeItems: "center",
-                bgcolor: theme.palette.action.hover,
-                border: `1px solid ${theme.palette.divider}`,
               }}
             >
-              <AddBoxOutlinedIcon
-                sx={{ fontSize: 18, color: theme.palette.text.secondary }}
+              <LocalHospitalIcon
+                sx={{ fontSize: 30, color: "#4b0f8a" }}
               />
             </Box>
 
